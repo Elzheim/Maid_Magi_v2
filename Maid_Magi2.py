@@ -129,7 +129,7 @@ async def on_ready(): # when bot get ready
 @client.command(aliases=['ㅅㅅ','ㅆ','시세']) #ㅅㅅ,ㅆ,시세에 명령어 작동
 async def price(ctx, goods=None,server=None,*,message=None):
     goods = goods
-    server= server
+    server = server
     message = message
     datas = {}
     if message == None:
