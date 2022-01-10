@@ -7,6 +7,7 @@ from datetime import datetime
 import os
 import discord
 from discord.ext import commands
+import time
 
 
 
@@ -151,6 +152,7 @@ async def price(ctx, goods=None,server=None,*,message=None):
                     line = '\t'.join(frags[1:])
                     embed.add_field(name=f'{frags[0]}', value=f'{line}', inline = False)
                 await ctx.send(embed=embed)
+                time.sleep(0.1)
     else:
         up.upload(goods,server,message)
         await ctx.send('소중한 정보를 주셔서 감사합니당!')
