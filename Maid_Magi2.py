@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from collections import OrderedDict
+from numpy import DataSource
 import pandas as pd
 from datetime import datetime
 import os
@@ -21,12 +22,8 @@ class Uploader():
         self.server = server
         self.data = data
     
-    def line_split(data):
-        Out = data.split('\n')
-        return Out
-    
     def data_digest(self,data):
-        line_list = Uploader.line_split(data)
+        line_list = data.split('\n')
         stack=[None]*len(line_list)
         for i, line in enumerate(line_list):
             list_in = line.split()
@@ -77,13 +74,11 @@ class Downloader():
             raise AttributeError
 
     def goods_only(self):
-        server = ['A','B']
+        server = ['A','E']
         data = {}
         for ser in server:
             data[ser] = Downloader.parser(self, ser)
-        data_A = data['A']
-        data_B = data['B']
-        return data_A, data_B
+        return data
     
     def goods_server(self):
         server = self.server
@@ -95,12 +90,12 @@ class Downloader():
         cur = db.cursor()
         table_list = cur.execute(f'select name from sqlite_master where type="table";').fetchall()
         target_table = (self.goods,)
+        Out = []
         if target_table in table_list:
             query=cur.execute(f'select * from {self.goods}')
             cols = [col[0] for col in query.description]
             race_result = pd.DataFrame.from_records(data=query.fetchall(), columns=cols)
             race_result = race_result.values.tolist()
-            Out = []
             for data in race_result:
                 for i in range(len(data)):
                     if data[i] == None:
@@ -119,7 +114,7 @@ class Downloader():
         with open('City.json','r',encoding='UTF-8') as js:
             json_data = json.load(js)
         data = json_data[culture]
-        print(data)
+        return data
 
 up=Uploader()
 down=Downloader()
@@ -131,37 +126,57 @@ async def on_ready(): # when bot get ready
     print('==========================================')
 
 @client.command(aliases=['ㅅㅅ','ㅆ','시세']) #ㅅㅅ,ㅆ,시세에 명령어 작동
-async def price(ctx, goods=None,server= None,*,message=None):
+async def price(ctx, goods=None,server=None,*,message=None):
     goods = goods
-    server = server
+    server= server
     message = message
+    datas = {}
     if message == None:
         datas = down.call_back(goods,server)
         if datas ==[]:      # call_back에 의한 자료가 없을 경우
             await ctx.send('죄송해요..... 입력된 자료가 없어요......ㅠㅠ')
-        else:               # call_back에 의한 자료가 있는 경우
-            embed = discord.Embed(title="시세 받아라~", description='물어보신 교역품과 서버 시세에요!',color=discord.Color.random())
-            for i, data in enumerate(datas):
-                embed.add_field(name=f'{i+1}번째 기록된 도시예요!', value=data,inline= False)
-            await ctx.send(embed=embed)
+        elif server != None:
+            embed = discord.Embed(title=f'{server}의 {goods} 시세에요!',color = discord.Color.random())
+            for data in datas:
+                frags = data.split('\t')
+                line = '\t'.join(frags[1:])
+                embed.add_field(name=f'{frags[0]}', value=f'{line}', inline = False)  
+            await ctx.send(embed=embed)      
+        else :
+            for key, value in datas.items():
+                embed = discord.Embed(title=f'{key} 서버의 {goods} 시세에요!',color = discord.Color.random())
+                datas = [datas for datas in value]
+                for data in datas:
+                    frags = data.split('\t')
+                    line = '\t'.join(frags[1:])
+                    embed.add_field(name=f'{frags[0]}', value=f'{line}', inline = False)
+                await ctx.send(embed=embed)
     else:
         up.upload(goods,server,message)
         await ctx.send('소중한 정보를 주셔서 감사합니당!')
     
 @client.command(aliases=['ㄱㅇㅍ','교역품'])
 async def trades(ctx, goods):
-    goods, cate, cul_city = down.goods_call(goods)
-    embed = discord.Embed(title=f'{goods}', desciption=f'{cate}',color=discord.Color.random())
-    for key, value in cul_city.items():
-        embed.add_field(name=f'{key}',value=f'{value}',inline=False)
+    datas = down.goods_call(goods)
+    embed = discord.Embed(title = f'{goods}',description=f'{datas["Category"]}',color = discord.Color.random())
+    for key, values in datas['Culture'].items():
+        embed.add_field(name=f'{key} 문화권의 내성항은 다음과 같아요!', value=f'{values}', inline = False)
     await ctx.send(embed=embed)
+#    embed = discord.Embed(title=f'{goods}', desciption=f'{cate}',color=discord.Color.random())
+#    for key, value in cul_city.items():
+#        embed.add_field(name=f'{key}',value=f'{value}',inline=False)
+#    await ctx.send(embed=embed)
 
 @client.command(aliases=['ㅁㅎㄱ','문화권'])
 async def cultures(ctx,*,culture):
     culture = culture
-    data= down.culture_call(culture)
-    embed = discord.Embed(title=f'{culture}',description=f'{data}', color=discord.Color.random())
-    await ctx.send(embed=embed)
+    if culture == '이탈리아' or culture == '남프랑스':
+            culture = '이탈리아/남프랑스'
+    datas= down.culture_call(culture)
+    embed = discord.Embed(title=f'{culture}에 소속된 도시를 안내해드려요!', description=f'{datas}',color = discord.Color.random())
+    await ctx.send(embed= embed)
+#    embed = discord.Embed(title=f'{culture}',description=f'{data}', color=discord.Color.random())
+#    await ctx.send(embed=embed)
     
 if __name__=="__main__":
     client.run(token)
