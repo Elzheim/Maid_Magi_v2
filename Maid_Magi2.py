@@ -9,9 +9,7 @@ import discord
 from discord.ext import commands
 import time
 
-
-
-token = os.environ.get('BOT_TOKEN') # 봇 토큰  # 봇 토큰 
+token = os.environ.get('BOT_TOKEN') # 봇 토큰  
 
 intents = discord.Intents.default()
 intents.members = True
@@ -152,7 +150,7 @@ async def price(ctx, goods=None,server=None,*,message=None):
                     line = '\t'.join(frags[1:])
                     embed.add_field(name=f'{frags[0]}', value=f'{line}', inline = False)
                 await ctx.send(embed=embed)
-                time.sleep(0.1)
+                
     else:
         up.upload(goods,server,message)
         await ctx.send('소중한 정보를 주셔서 감사합니당!')
@@ -164,10 +162,6 @@ async def trades(ctx, goods):
     for key, values in datas['Culture'].items():
         embed.add_field(name=f'{key} 문화권의 내성항은 다음과 같아요!', value=f'{values}', inline = False)
     await ctx.send(embed=embed)
-#    embed = discord.Embed(title=f'{goods}', desciption=f'{cate}',color=discord.Color.random())
-#    for key, value in cul_city.items():
-#        embed.add_field(name=f'{key}',value=f'{value}',inline=False)
-#    await ctx.send(embed=embed)
 
 @client.command(aliases=['ㅁㅎㄱ','문화권'])
 async def cultures(ctx,*,culture):
@@ -177,8 +171,6 @@ async def cultures(ctx,*,culture):
     datas= down.culture_call(culture)
     embed = discord.Embed(title=f'{culture}에 소속된 도시를 안내해드려요!', description=f'{datas}',color = discord.Color.random())
     await ctx.send(embed= embed)
-#    embed = discord.Embed(title=f'{culture}',description=f'{data}', color=discord.Color.random())
-#    await ctx.send(embed=embed)
-    
+
 if __name__=="__main__":
     client.run(token)
