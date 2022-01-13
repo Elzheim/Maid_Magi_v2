@@ -25,7 +25,9 @@ class Uploader():
         line_list = data.split('\n')
         stack=[None]*len(line_list)
         for i, line in enumerate(line_list):
-            list_in = line.split()
+            list_in = [None] *4
+            for j, frag in enumerate(line.split()):
+                list_in[j] = frag
             stack[i]=list_in
         stack= pd.DataFrame(stack,columns=['City','Price','Trend','Drop'])
         now = datetime.now()
