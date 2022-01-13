@@ -172,5 +172,14 @@ async def cultures(ctx,*,culture):
     embed = discord.Embed(title=f'{culture}에 소속된 도시를 안내해드려요!', description=f'{datas}',color = discord.Color.random())
     await ctx.send(embed= embed)
 
+@client.command(aliases=['초기화','ㅊㄱㅎ','리셋','ㄹㅅ','ㄽ'])
+async def reset(ctx, goods, server):
+    conn = sqlite3.connect(f'Data_{server}.db')
+    cur = conn.cursor()
+    cur.execute(f'delete from {goods}')
+    conn.commit()
+    conn.close()
+    await ctx.send(f'{server} 서버의 {goods} 데이터를 초기화 했습니다!')
+    
 if __name__=="__main__":
     client.run(token)
